@@ -1,17 +1,24 @@
 package com.ljh.mymusic;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.ljh.mymusic.adapter.MyAdapter;
 import com.ljh.mymusic.bean.Mp3Info;
+import com.ljh.mymusic.service.PlayService;
+import com.ljh.mymusic.utils.AppConstant;
+import com.ljh.mymusic.utils.MediaUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,19 +28,14 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView_mp3;
     private MyAdapter adapter;
     private List<Mp3Info> list;
-    List<String> titles;
+    private int listPosition=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        list = getMp3Infos();
-        titles=new ArrayList<>();
-        Log.d("TAG1",list.get(0).getTitle());
-        for (int i=0;i<list.size();i++){
-            String title=list.get(i).getTitle();
-            titles.add(title);
-        }
+        list = MediaUtil.getMp3Infos(this);
+        Log.d("TAG",list.toString());
 
         init();
 
@@ -43,42 +45,25 @@ public class MainActivity extends AppCompatActivity {
         listView_mp3 = (ListView) findViewById(R.id.listView_mp3);
         adapter=new MyAdapter(MainActivity.this,list);
         listView_mp3.setAdapter(adapter);
+
+        listView_mp3.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                listPosition=i;
+                playMusic(listPosition);
+            }
+        });
     }
 
-    private List<Mp3Info> getMp3Infos() {
-        List<Mp3Info> mp3Infos=new ArrayList<>();
-        Cursor cursor=getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,null,null,null,MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
-
-        for (int i=0;i<cursor.getCount();i++){
-            Mp3Info mp3Info=new Mp3Info();
-            cursor.moveToNext();
-            long id = cursor.getLong(cursor
-                    .getColumnIndex(MediaStore.Audio.Media._ID));   //音乐id
-            String title = cursor.getString((cursor
-                    .getColumnIndex(MediaStore.Audio.Media.TITLE)));//音乐标题
-            String artist = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.ARTIST));//艺术家
-            long duration = cursor.getLong(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.DURATION));//时长
-            long size = cursor.getLong(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.SIZE));  //文件大小
-            String url = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.DATA));              //文件路径
-            int isMusic = cursor.getInt(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));//是否为音乐
-            //if (isMusic != 0) {    //只把音乐添加到集合当中
-                mp3Info.setId(id);
-                mp3Info.setTitle(title);
-                mp3Info.setArtist(artist);
-                mp3Info.setDuration(duration);
-                mp3Info.setSize(size);
-                mp3Info.setUrl(url);
-                mp3Infos.add(mp3Info);
-            //}
+    private void playMusic(int listPosition) {
+        if (listView_mp3!=null){
+            Mp3Info mp3Info=list.get(listPosition);
+            Toast.makeText(MainActivity.this, "播放音乐："+mp3Info.getTitle(), Toast.LENGTH_SHORT).show();
+            Intent intent=new Intent(MainActivity.this,PlayService.class);
+            intent.putExtra("url",mp3Info.getUrl());
+            intent.putExtra("MSG", AppConstant.PlayerMsg.PLAY_MSG);
+            startService(intent);
         }
-        Log.d("TAG",mp3Infos.size()+"list大小");
-        return mp3Infos;
-
     }
 
 
