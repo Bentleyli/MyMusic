@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import com.ljh.mymusic.adapter.MyAdapter;
 import com.ljh.mymusic.bean.Mp3Info;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private ListView listView_mp3;
-    private ArrayAdapter adapter;
+    private MyAdapter adapter;
     private List<Mp3Info> list;
     List<String> titles;
     @Override
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
         listView_mp3 = (ListView) findViewById(R.id.listView_mp3);
-        adapter=new ArrayAdapter(this,android.R.layout.simple_list_item_1,titles);
+        adapter=new MyAdapter(MainActivity.this,list);
         listView_mp3.setAdapter(adapter);
     }
 
@@ -65,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
                     .getColumnIndex(MediaStore.Audio.Media.DATA));              //文件路径
             int isMusic = cursor.getInt(cursor
                     .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));//是否为音乐
-            if (isMusic != 0) {    //只把音乐添加到集合当中
-                Log.d("TAG:",i+"");
+            //if (isMusic != 0) {    //只把音乐添加到集合当中
                 mp3Info.setId(id);
                 mp3Info.setTitle(title);
                 mp3Info.setArtist(artist);
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 mp3Info.setSize(size);
                 mp3Info.setUrl(url);
                 mp3Infos.add(mp3Info);
-            }
+            //}
         }
         Log.d("TAG",mp3Infos.size()+"list大小");
         return mp3Infos;
